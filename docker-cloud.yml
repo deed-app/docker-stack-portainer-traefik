@@ -16,6 +16,7 @@ services:
       - "--acme.onHostRule=true"
       - "--acme.onDemand=false"
       - "--acme.email=${PROXY_ACME_EMAIL}"
+      - "--acme.storage=/etc/traefik/acme/acme.json"
       - "--docker"
       - "--docker.swarmMode"
       - "--docker.endpoint=unix:///var/run/docker.sock"
@@ -38,7 +39,7 @@ services:
         protocol: tcp
         mode: host
     volumes:
-      - traefik_data:/etc/traefik/
+      - traefik_data:/etc/traefik/acme
       - "/var/run/docker.sock:/var/run/docker.sock"
     deploy:
       mode: global
