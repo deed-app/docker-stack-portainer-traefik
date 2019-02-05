@@ -33,7 +33,7 @@ services:
       - target: 8080
         published: 8080
         protocol: tcp
-        mode: hostr
+        mode: host
       - target: 443
         published: 443
         protocol: tcp
