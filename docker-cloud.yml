@@ -1,0 +1,131 @@
+version: '3.2'
+services:
+  proxy:
+    image: traefik
+    command:
+      - "--api"
+      - "--entrypoints=Name:http Address::80 {% if traefik_force_https == 'true' %}Redirect.EntryPoint:https{% endif %}"
+      # - "--entrypoints=Name:https Address::443 TLS:/home/{{root_domain}}/ssl/gogson.local.pem,/ssl/gogson.local.key"
+      - "--entrypoints=Name:https Address::443 TLS"
+      - "--defaultentrypoints=http,https"
+      - "--acme"
+      - "--acme.storage=/etc/traefik/acme/acme.json"
+      - "--acme.entryPoint=https"
+      - "--acme.httpChallenge.entryPoint=http"
+      - "--acme.onHostRule=true"
+      - "--acme.onDemand=false"
+      - "--acme.email={{traefik_acme_email}}"
+      - "--docker"
+      - "--docker.swarmMode"
+      - "--docker.endpoint=unix:///var/run/docker.sock"
+      - "--docker.domain={{root_domain}}"
+      - "--docker.watch"
+    networks:
+      - proxy
+      - agents
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+    volumes:
+      - traefik_data:/etc/traefik/
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      mode: global
+      labels:
+        - "traefik.docker.network=proxy"
+        - "traefik.enable=true"
+        - "traefik.basic.frontend.rule=Host:{{traefik_hostname}}"
+        - "traefik.basic.port=8080"
+        - "traefik.basic.protocol=http"
+        - "traefik.frontend.auth.basic={{traefik_basic_auth}}"
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+  portainer:
+    image: portainer/portainer
+    command: "-H tcp://tasks.agent:9001 --tlsskipverify"
+    ports:
+      - target: 9000
+        published: 9000
+        protocol: tcp
+        mode: host
+    volumes:
+      - portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - proxy
+      - agents
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      labels:
+        - "traefik.docker.network=proxy"
+        - "traefik.enable=true"
+        - "traefik.port=9000"
+        - "traefik.frontend.rule=Host:{{portainer_hostname}}"
+
+  agent:
+    image: portainer/agent
+    environment:
+      AGENT_CLUSTER_ADDR: tasks.agent
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+    ports:
+      - target: 9001
+        published: 9001
+        protocol: tcp
+        mode: host
+    networks:
+      - agents
+    deploy:
+      mode: global
+
+  whoami:
+    image: jwilder/whoami
+    ports:
+      - target: 9043
+        published: 8000
+        protocol: tcp
+        mode: host
+    networks:
+      - proxy
+    deploy:
+      mode: global
+      labels:
+        - "traefik.docker.network=proxy"
+        - "traefik.enable=true"
+        - "traefik.port=8000"
+        - "traefik.frontend.rule=Host:{{whoami_hostname}}"
+
+networks:
+  agents:
+    driver: overlay
+    attachable: true
+  proxy:
+    driver: overlay
+    attachable: true
+
+volumes:
+  portainer_data:
+    external: true
+  traefik_data:
+    external: true
