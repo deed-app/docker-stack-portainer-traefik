@@ -24,7 +24,7 @@ services:
       - "--accessLog.format=json"
       - "--docker"
       - "--docker.swarmMode"
-      - "--docker.network proxy"
+      - "--docker.network=proxy"
       - "--docker.endpoint=unix:///var/run/docker.sock"
       - "--docker.domain=${HOST_ROOT_DOMAIN}"
       - "--docker.watch"
