@@ -120,11 +120,11 @@ services:
 
 networks:
   agents:
-    driver: overlay
-    attachable: true
+    external:
+      name: agents
   proxy:
-    driver: overlay
-    attachable: true
+    external:
+      name: proxy
 
 volumes:
   portainer_data:
