@@ -4,8 +4,9 @@ services:
     image: traefik
     command:
       - "--api"
-      - "--entrypoints=Name:http Address::80 {% if traefik_force_https == 'true' %}Redirect.EntryPoint:https{% endif %}"
-      # - "--entrypoints=Name:https Address::443 TLS:/home/{{root_domain}}/ssl/gogson.local.pem,/ssl/gogson.local.key"
+      - "--entrypoints=Name:http Address::80 Redirect.EntryPoint:https"
+      # - "--entrypoints=Name:http Address::80 {% if traefik_force_https == 'true' %}Redirect.EntryPoint:https{% endif %}"
+      # - "--entrypoints=Name:https Address::443 TLS:/home/${HOST_ROOT_DOMAIN}/ssl/gogson.local.pem,/ssl/gogson.local.key"
       - "--entrypoints=Name:https Address::443 TLS"
       - "--defaultentrypoints=http,https"
       - "--acme"
@@ -14,11 +15,11 @@ services:
       - "--acme.httpChallenge.entryPoint=http"
       - "--acme.onHostRule=true"
       - "--acme.onDemand=false"
-      - "--acme.email={{traefik_acme_email}}"
+      - "--acme.email=${PROXY_ACME_EMAIL}"
       - "--docker"
       - "--docker.swarmMode"
       - "--docker.endpoint=unix:///var/run/docker.sock"
-      - "--docker.domain={{root_domain}}"
+      - "--docker.domain=${HOST_ROOT_DOMAIN}"
       - "--docker.watch"
     networks:
       - proxy
@@ -31,7 +32,7 @@ services:
       - target: 8080
         published: 8080
         protocol: tcp
-        mode: host
+        mode: hostr
       - target: 443
         published: 443
         protocol: tcp
@@ -44,10 +45,10 @@ services:
       labels:
         - "traefik.docker.network=proxy"
         - "traefik.enable=true"
-        - "traefik.basic.frontend.rule=Host:{{traefik_hostname}}"
+        - "traefik.basic.frontend.rule=Host:${PROXY_TRAEFIK_DOMAIN}"
         - "traefik.basic.port=8080"
         - "traefik.basic.protocol=http"
-        - "traefik.frontend.auth.basic={{traefik_basic_auth}}"
+        - "traefik.frontend.auth.basic=${PROXY_TRAEFIK_BASIC_AUTH}"
       placement:
         constraints:
           - node.role == manager
@@ -80,7 +81,7 @@ services:
         - "traefik.docker.network=proxy"
         - "traefik.enable=true"
         - "traefik.port=9000"
-        - "traefik.frontend.rule=Host:{{portainer_hostname}}"
+        - "traefik.frontend.rule=Host:${PROXY_PORTAINER_DOMAIN}"
 
   agent:
     image: portainer/agent
@@ -114,7 +115,7 @@ services:
         - "traefik.docker.network=proxy"
         - "traefik.enable=true"
         - "traefik.port=8000"
-        - "traefik.frontend.rule=Host:{{whoami_hostname}}"
+        - "traefik.frontend.rule=Host:${PROXY_WHOAMI_DOMAIN}"
 
 networks:
   agents:
