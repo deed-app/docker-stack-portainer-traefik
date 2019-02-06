@@ -1,5 +1,13 @@
 version: '3.2'
+
 services:
+
+  ################################################################################
+  ################################################################################
+  ##### TRAEFIK AS A HTTPS LOAD BALANCER
+  ################################################################################
+  ################################################################################
+
   proxy:
     image: traefik
     command:
@@ -67,9 +75,19 @@ services:
       restart_policy:
         condition: on-failure
 
+  ################################################################################
+  ################################################################################
+  ##### PORTAINER AND PORTAINER AGENT
+  ################################################################################
+  ################################################################################
+
   portainer:
     image: portainer/portainer
-    command: "-H tcp://tasks.agent:9001 --tlsskipverify"
+    command: 
+      - "-H tcp://tasks.pagent:9001"
+      - "--tlsskipverify"
+      - "--logo=https://s3.eu-west-3.amazonaws.com/gogson/gogson-logo-white.png"
+      - "--"
     ports:
       - target: 9000
         published: 9000
@@ -92,10 +110,10 @@ services:
         - "traefik.port=9000"
         - "traefik.frontend.rule=Host:${PROXY_PORTAINER_DOMAIN}"
 
-  agent:
+  pagent:
     image: portainer/agent
     environment:
-      AGENT_CLUSTER_ADDR: tasks.agent
+      AGENT_CLUSTER_ADDR: tasks.pagent
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/volumes:/var/lib/docker/volumes
@@ -108,6 +126,82 @@ services:
       - agents
     deploy:
       mode: global
+
+  ################################################################################
+  ################################################################################
+  ##### SWARMPIT DB, UI AND AGENT
+  ################################################################################
+  ################################################################################
+
+  app:
+    image: swarmpit/swarmpit:latest
+    environment:
+      - SWARMPIT_DB=http://swarmpitdb:5984
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - target: 8080
+        published: 8084
+        protocol: tcp
+        mode: host
+    networks:
+      - agents
+      - proxy
+    deploy:
+      labels:
+        - "traefik.docker.network=proxy"
+        - "traefik.enable=true"
+        - "traefik.port=8084"
+        - "traefik.frontend.rule=Host:${PROXY_SWARMPIT_DOMAIN}"
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+      placement:
+        constraints:
+          - node.role == manager
+
+  swarmpitdb:
+    image: couchdb:2.3.0
+    volumes:
+      - swarmpit_data:/opt/couchdb/data
+    networks:
+      - agents
+    deploy:
+      resources:
+        limits:
+          cpus: '0.30'
+          memory: 512M
+        reservations:
+          cpus: '0.15'
+          memory: 256M
+
+  spagent:
+    image: swarmpit/agent:latest
+    environment:
+      - DOCKER_API_VERSION=1.35
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - agents
+    deploy:
+      mode: global
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 64M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
+
+  ################################################################################
+  ################################################################################
+  ##### DATADOG LOG COLLECTOR AGENT
+  ################################################################################
+  ################################################################################
 
   datadog-agent:
     image: datadog/agent:latest
@@ -127,6 +221,12 @@ services:
       restart_policy:
         condition: any
 
+  ################################################################################
+  ################################################################################
+  ##### SAMPLE APP - WHOAMI DOCKER CONTAINER
+  ################################################################################
+  ################################################################################
+
   whoami:
     image: jwilder/whoami
     ports:
@@ -143,6 +243,12 @@ services:
         - "traefik.enable=true"
         - "traefik.port=8000"
         - "traefik.frontend.rule=Host:${PROXY_WHOAMI_DOMAIN}"
+
+################################################################################
+################################################################################
+##### NEEDED EXTERNAL OVERLAY NETWORKS
+################################################################################
+################################################################################
 
 networks:
   agents:

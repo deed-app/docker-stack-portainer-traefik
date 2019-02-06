@@ -23,6 +23,7 @@ function configure()
     
     docker volume create portainer_data 2>&1 | sed "${SED_PATTERN}"
     docker volume create traefik_data 2>&1 | sed "${SED_PATTERN}"
+    docker volume create swarmpit_data 2>&1 | sed "${SED_PATTERN}"
 
     printf "${CGREEN}Creating networks${COFF}\n"
 
