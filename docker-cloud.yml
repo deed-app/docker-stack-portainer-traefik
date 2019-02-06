@@ -86,9 +86,8 @@ services:
     command: 
       - "-H tcp://tasks.pagent:9001"
       - "--tlsskipverify"
-      - "--admin-password ${ADMIN_PASSWORD}"
+      - "--admin-password=${ADMIN_PASSWORD}"
       - "--logo=https://s3.eu-west-3.amazonaws.com/gogson/gogson-logo-white.png"
-      - "--"
     ports:
       - target: 9000
         published: 9000
@@ -134,7 +133,7 @@ services:
   ################################################################################
   ################################################################################
 
-  app:
+  swarmpit:
     image: swarmpit/swarmpit:latest
     environment:
       - SWARMPIT_DB=http://swarmpitdb:5984
