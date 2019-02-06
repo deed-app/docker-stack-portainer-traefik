@@ -124,7 +124,6 @@ services:
       mode: global
       restart_policy:
         condition: any
-    restart: always
 
   whoami:
     image: jwilder/whoami
