@@ -83,7 +83,7 @@ services:
 
   portainer:
     image: portainer/portainer
-    command: -H tcp://tasks.agent:9001 --tlsskipverify --admin-password="${ADMIN_PASSWORD}" --logo="https://goo.gl/r4g2CQ"
+    command: -H tcp://tasks.pagent:9001 --tlsskipverify --admin-password="${ADMIN_PASSWORD}" --logo="https://goo.gl/r4g2CQ"
     ports:
       - target: 9000
         published: 9000
@@ -149,16 +149,8 @@ services:
         - "traefik.enable=true"
         - "traefik.port=8080"
         - "traefik.frontend.rule=Host:${PROXY_SWARMPIT_DOMAIN}"
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 1024M
-        reservations:
-          cpus: '0.25'
-          memory: 512M
       placement:
-        constraints:
-          - node.role == manager
+        constraints: [node.role == manager]
 
   swarmpitdb:
     image: couchdb:2.3.0
@@ -167,13 +159,7 @@ services:
     networks:
       - agents
     deploy:
-      resources:
-        limits:
-          cpus: '0.30'
-          memory: 512M
-        reservations:
-          cpus: '0.15'
-          memory: 256M
+      mode: global
 
   spagent:
     image: swarmpit/agent:latest
@@ -185,13 +171,6 @@ services:
       - agents
     deploy:
       mode: global
-      resources:
-        limits:
-          cpus: '0.10'
-          memory: 64M
-        reservations:
-          cpus: '0.05'
-          memory: 32M
 
   ################################################################################
   ################################################################################
