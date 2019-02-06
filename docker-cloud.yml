@@ -8,72 +8,72 @@ services:
   ################################################################################
   ################################################################################
 
-  proxy:
-    image: traefik
-    command:
-      - "--api"
-      - "--entrypoints=Name:http Address::80 Redirect.EntryPoint:https"
-      # - "--entrypoints=Name:http Address::80 {% if traefik_force_https == 'true' %}Redirect.EntryPoint:https{% endif %}"
-      # - "--entrypoints=Name:https Address::443 TLS:/home/${HOST_ROOT_DOMAIN}/ssl/gogson.local.pem,/ssl/gogson.local.key"
-      - "--entrypoints=Name:https Address::443 TLS"
-      - "--defaultentrypoints=http,https"
-      - "--acme"
-      - "--acme.storage=/etc/traefik/acme/acme.json"
-      - "--acme.entryPoint=https"
-      - "--acme.httpChallenge.entryPoint=http"
-      - "--acme.onHostRule=true"
-      - "--acme.onDemand=false"
-      - "--acme.email=${PROXY_ACME_EMAIL}"
-      - "--acme.storage=/etc/traefik/acme/acme.json"
-      - "--logLevel=DEBUG"
-      - "--traefikLog.filePath=/etc/traefik/acme/traefik.log"
-      - "--traefikLog.format=json"
-      - "--accessLog.filePath=/etc/traefik/acme/access.log"
-      - "--accessLog.format=json"
-      - "--docker"
-      - "--docker.swarmMode"
-      - "--docker.network=proxy"
-      - "--docker.endpoint=unix:///var/run/docker.sock"
-      - "--docker.domain=${HOST_ROOT_DOMAIN}"
-      - "--docker.watch"
-      - "--web.metrics.datadog=true"
-      - "--web.metrics.datadog.address=datadog-agent:8125"
-    networks:
-      - proxy
-      - agents
-    ports:
-      - target: 80
-        published: 80
-        protocol: tcp
-        mode: host
-      - target: 8080
-        published: 8080
-        protocol: tcp
-        mode: host
-      - target: 443
-        published: 443
-        protocol: tcp
-        mode: host
-    volumes:
-      - traefik_data:/etc/traefik/acme
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    deploy:
-      mode: global
-      labels:
-        - "traefik.docker.network=proxy"
-        - "traefik.enable=true"
-        - "traefik.basic.frontend.rule=Host:${PROXY_TRAEFIK_DOMAIN}"
-        - "traefik.basic.port=8080"
-        - "traefik.basic.protocol=http"
-        - "traefik.frontend.auth.basic=admin:${ADMIN_PASSWORD}"
-      placement:
-        constraints:
-          - node.role == manager
-      update_config:
-        parallelism: 1
-        delay: 10s
-      restart_policy:
-        condition: on-failure
+  # proxy:
+  #   image: traefik
+  #   command:
+  #     - "--api"
+  #     - "--entrypoints=Name:http Address::80 Redirect.EntryPoint:https"
+  #     # - "--entrypoints=Name:http Address::80 {% if traefik_force_https == 'true' %}Redirect.EntryPoint:https{% endif %}"
+  #     # - "--entrypoints=Name:https Address::443 TLS:/home/${HOST_ROOT_DOMAIN}/ssl/gogson.local.pem,/ssl/gogson.local.key"
+  #     - "--entrypoints=Name:https Address::443 TLS"
+  #     - "--defaultentrypoints=http,https"
+  #     - "--acme"
+  #     - "--acme.storage=/etc/traefik/acme/acme.json"
+  #     - "--acme.entryPoint=https"
+  #     - "--acme.httpChallenge.entryPoint=http"
+  #     - "--acme.onHostRule=true"
+  #     - "--acme.onDemand=false"
+  #     - "--acme.email=${PROXY_ACME_EMAIL}"
+  #     - "--acme.storage=/etc/traefik/acme/acme.json"
+  #     - "--logLevel=DEBUG"
+  #     - "--traefikLog.filePath=/etc/traefik/acme/traefik.log"
+  #     - "--traefikLog.format=json"
+  #     - "--accessLog.filePath=/etc/traefik/acme/access.log"
+  #     - "--accessLog.format=json"
+  #     - "--docker"
+  #     - "--docker.swarmMode"
+  #     - "--docker.network=proxy"
+  #     - "--docker.endpoint=unix:///var/run/docker.sock"
+  #     - "--docker.domain=${HOST_ROOT_DOMAIN}"
+  #     - "--docker.watch"
+  #     - "--web.metrics.datadog=true"
+  #     - "--web.metrics.datadog.address=datadog-agent:8125"
+  #   networks:
+  #     - proxy
+  #     - agents
+  #   ports:
+  #     - target: 80
+  #       published: 80
+  #       protocol: tcp
+  #       mode: host
+  #     - target: 8080
+  #       published: 8080
+  #       protocol: tcp
+  #       mode: host
+  #     - target: 443
+  #       published: 443
+  #       protocol: tcp
+  #       mode: host
+  #   volumes:
+  #     - traefik_data:/etc/traefik/acme
+  #     - "/var/run/docker.sock:/var/run/docker.sock"
+  #   deploy:
+  #     mode: global
+  #     labels:
+  #       - "traefik.docker.network=proxy"
+  #       - "traefik.enable=true"
+  #       - "traefik.basic.frontend.rule=Host:${PROXY_TRAEFIK_DOMAIN}"
+  #       - "traefik.basic.port=8080"
+  #       - "traefik.basic.protocol=http"
+  #       - "traefik.frontend.auth.basic=admin:${ADMIN_PASSWORD}"
+  #     placement:
+  #       constraints:
+  #         - node.role == manager
+  #     update_config:
+  #       parallelism: 1
+  #       delay: 10s
+  #     restart_policy:
+  #       condition: on-failure
 
   ################################################################################
   ################################################################################
@@ -83,11 +83,7 @@ services:
 
   portainer:
     image: portainer/portainer
-    command: 
-      - "--admin-password='${ADMIN_PASSWORD}'"
-      - "--logo='https://s3.eu-west-3.amazonaws.com/gogson/gogson-logo-white.png'"
-      - "-H tcp://tasks.pagent:9001"
-      - "--tlsskipverify"
+    command: -H tcp://tasks.agent:9001 --tlsskipverify --admin-password="${ADMIN_PASSWORD}" --logo="https://goo.gl/r4g2CQ"
     ports:
       - target: 9000
         published: 9000
@@ -133,69 +129,69 @@ services:
   ################################################################################
   ################################################################################
 
-  swarmpit:
-    image: swarmpit/swarmpit:latest
-    environment:
-      - SWARMPIT_DB=http://swarmpitdb:5984
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - target: 8080
-        published: 8084
-        protocol: tcp
-        mode: host
-    networks:
-      - agents
-      - proxy
-    deploy:
-      labels:
-        - "traefik.docker.network=proxy"
-        - "traefik.enable=true"
-        - "traefik.port=8084"
-        - "traefik.frontend.rule=Host:${PROXY_SWARMPIT_DOMAIN}"
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 1024M
-        reservations:
-          cpus: '0.25'
-          memory: 512M
-      placement:
-        constraints:
-          - node.role == manager
+  # swarmpit:
+  #   image: swarmpit/swarmpit:latest
+  #   environment:
+  #     - SWARMPIT_DB=http://swarmpitdb:5984
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   ports:
+  #     - target: 8080
+  #       published: 8084
+  #       protocol: tcp
+  #       mode: host
+  #   networks:
+  #     - agents
+  #     - proxy
+  #   deploy:
+  #     labels:
+  #       - "traefik.docker.network=proxy"
+  #       - "traefik.enable=true"
+  #       - "traefik.port=8084"
+  #       - "traefik.frontend.rule=Host:${PROXY_SWARMPIT_DOMAIN}"
+  #     resources:
+  #       limits:
+  #         cpus: '0.50'
+  #         memory: 1024M
+  #       reservations:
+  #         cpus: '0.25'
+  #         memory: 512M
+  #     placement:
+  #       constraints:
+  #         - node.role == manager
 
-  swarmpitdb:
-    image: couchdb:2.3.0
-    volumes:
-      - swarmpit_data:/opt/couchdb/data
-    networks:
-      - agents
-    deploy:
-      resources:
-        limits:
-          cpus: '0.30'
-          memory: 512M
-        reservations:
-          cpus: '0.15'
-          memory: 256M
+  # swarmpitdb:
+  #   image: couchdb:2.3.0
+  #   volumes:
+  #     - swarmpit_data:/opt/couchdb/data
+  #   networks:
+  #     - agents
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '0.30'
+  #         memory: 512M
+  #       reservations:
+  #         cpus: '0.15'
+  #         memory: 256M
 
-  spagent:
-    image: swarmpit/agent:latest
-    environment:
-      - DOCKER_API_VERSION=1.35
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - agents
-    deploy:
-      mode: global
-      resources:
-        limits:
-          cpus: '0.10'
-          memory: 64M
-        reservations:
-          cpus: '0.05'
-          memory: 32M
+  # spagent:
+  #   image: swarmpit/agent:latest
+  #   environment:
+  #     - DOCKER_API_VERSION=1.35
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   networks:
+  #     - agents
+  #   deploy:
+  #     mode: global
+  #     resources:
+  #       limits:
+  #         cpus: '0.10'
+  #         memory: 64M
+  #       reservations:
+  #         cpus: '0.05'
+  #         memory: 32M
 
   ################################################################################
   ################################################################################
@@ -203,23 +199,23 @@ services:
   ################################################################################
   ################################################################################
 
-  datadog-agent:
-    image: datadog/agent:latest
-    environment:
-      - "DD_API_KEY=${DATADOG_AGENT_API_KEY}"
-      - "DD_LOGS_ENABLED=true"
-      - "DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true"
-      - "DD_AC_EXCLUDE=name:datadog-agent"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /proc/:/host/proc/:ro
-      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
-    networks:
-      - agents
-    deploy:
-      mode: global
-      restart_policy:
-        condition: any
+  # datadog-agent:
+  #   image: datadog/agent:latest
+  #   environment:
+  #     - "DD_API_KEY=${DATADOG_AGENT_API_KEY}"
+  #     - "DD_LOGS_ENABLED=true"
+  #     - "DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true"
+  #     - "DD_AC_EXCLUDE=name:datadog-agent"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - /proc/:/host/proc/:ro
+  #     - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+  #   networks:
+  #     - agents
+  #   deploy:
+  #     mode: global
+  #     restart_policy:
+  #       condition: any
 
   ################################################################################
   ################################################################################
@@ -227,22 +223,22 @@ services:
   ################################################################################
   ################################################################################
 
-  whoami:
-    image: jwilder/whoami
-    ports:
-      - target: 9043
-        published: 8000
-        protocol: tcp
-        mode: host
-    networks:
-      - proxy
-    deploy:
-      mode: global
-      labels:
-        - "traefik.docker.network=proxy"
-        - "traefik.enable=true"
-        - "traefik.port=8000"
-        - "traefik.frontend.rule=Host:${PROXY_WHOAMI_DOMAIN}"
+  # whoami:
+  #   image: jwilder/whoami
+  #   ports:
+  #     - target: 9043
+  #       published: 8000
+  #       protocol: tcp
+  #       mode: host
+  #   networks:
+  #     - proxy
+  #   deploy:
+  #     mode: global
+  #     labels:
+  #       - "traefik.docker.network=proxy"
+  #       - "traefik.enable=true"
+  #       - "traefik.port=8000"
+  #       - "traefik.frontend.rule=Host:${PROXY_WHOAMI_DOMAIN}"
 
 ################################################################################
 ################################################################################
