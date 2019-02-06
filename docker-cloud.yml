@@ -143,7 +143,7 @@ services:
       labels:
         - "traefik.docker.network=proxy"
         - "traefik.enable=true"
-        - "traefik.port=8087"
+        - "traefik.port=8080"
         - "traefik.frontend.rule=Host:${PROXY_SWARMPIT_DOMAIN}"
       placement:
         constraints: [node.role == manager]
