@@ -135,11 +135,6 @@ services:
       - SWARMPIT_DB=http://swarmpitdb:5984
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - target: 8084
-        published: 8080
-        protocol: tcp
-        mode: host
     networks:
       - agents
       - proxy
