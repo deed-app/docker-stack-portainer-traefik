@@ -149,6 +149,7 @@ services:
       - swarmpit_data:/opt/couchdb/data
     networks:
       - agents
+      - proxy
     deploy:
       mode: global
 
