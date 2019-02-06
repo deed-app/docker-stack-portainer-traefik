@@ -107,6 +107,22 @@ services:
     deploy:
       mode: global
 
+  datadog-agent:
+    image: datadog/agent:latest
+    environment:
+      - "DD_API_KEY=${DATADOG_AGENT_API_KEY}"
+    networks:
+      - agents
+    deploy:
+      mode: global
+      restart_policy:
+        condition: any
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+
   whoami:
     image: jwilder/whoami
     ports:
@@ -136,4 +152,6 @@ volumes:
   portainer_data:
     external: true
   traefik_data:
+    external: true
+  swarmpit_data:
     external: true
