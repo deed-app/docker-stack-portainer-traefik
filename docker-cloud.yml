@@ -65,7 +65,7 @@ services:
         - "traefik.basic.frontend.rule=Host:${PROXY_TRAEFIK_DOMAIN}"
         - "traefik.basic.port=8080"
         - "traefik.basic.protocol=http"
-        - "traefik.frontend.auth.basic=${PROXY_TRAEFIK_BASIC_AUTH}"
+        - "traefik.frontend.auth.basic=admin:${ADMIN_PASSWORD}"
       placement:
         constraints:
           - node.role == manager
@@ -86,6 +86,7 @@ services:
     command: 
       - "-H tcp://tasks.pagent:9001"
       - "--tlsskipverify"
+      - "--admin-password ${ADMIN_PASSWORD}"
       - "--logo=https://s3.eu-west-3.amazonaws.com/gogson/gogson-logo-white.png"
       - "--"
     ports:
