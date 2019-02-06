@@ -28,6 +28,8 @@ services:
       - "--docker.endpoint=unix:///var/run/docker.sock"
       - "--docker.domain=${HOST_ROOT_DOMAIN}"
       - "--docker.watch"
+      - "--web.metrics.datadog=true"
+      - "--web.metrics.datadog.address=datadog-agent:8125"
     networks:
       - proxy
       - agents
