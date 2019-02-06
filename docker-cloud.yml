@@ -134,11 +134,16 @@ services:
     networks:
       - agents
       - proxy
+    ports:
+      - target: 8080
+        published: 8087
+        protocol: tcp
+        mode: host
     deploy:
       labels:
         - "traefik.docker.network=proxy"
         - "traefik.enable=true"
-        - "traefik.port=8080"
+        - "traefik.port=8087"
         - "traefik.frontend.rule=Host:${PROXY_SWARMPIT_DOMAIN}"
       placement:
         constraints: [node.role == manager]
