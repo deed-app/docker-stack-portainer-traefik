@@ -65,7 +65,7 @@ services:
         - "traefik.basic.frontend.rule=Host:${PROXY_TRAEFIK_DOMAIN}"
         - "traefik.basic.port=8080"
         - "traefik.basic.protocol=http"
-        - "traefik.frontend.auth.basic=admin:${ADMIN_PASSWORD}"
+        - "traefik.frontend.auth.basic=admin:${TRAEFIK_ADMIN_PASSWORD}"
       placement:
         constraints:
           - node.role == manager
@@ -83,7 +83,7 @@ services:
 
   portainer:
     image: portainer/portainer
-    command: -H tcp://tasks.pagent:9001 --tlsskipverify --admin-password="${ADMIN_PASSWORD}" --logo="https://goo.gl/r4g2CQ"
+    command: -H tcp://tasks.pagent:9001 --tlsskipverify --admin-password "${PORTAINER_ADMIN_PASSWORD}" --logo "https://goo.gl/r4g2CQ"
     ports:
       - target: 9000
         published: 9000
